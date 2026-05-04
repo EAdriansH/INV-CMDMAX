@@ -2,12 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace INV_CMDMAX.Metodos
-{
-    internal class Demaxmin
-    {
-    }
-}
+
 
 public class ResolvedorDemaXMin
 {
