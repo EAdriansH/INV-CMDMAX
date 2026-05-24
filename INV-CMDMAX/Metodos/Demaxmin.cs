@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 
-
-
 public class ResolvedorDemaXMin
 {
     // Retorna una tupla con la Matriz de Asignaciones y el Costo Total Z

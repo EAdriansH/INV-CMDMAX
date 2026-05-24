@@ -4,6 +4,10 @@ namespace INV_CMDMAX
 {
     public partial class Form1 : Form
     {
+        // Guardar resultados en variables de instancia para evitar borrados accidentales
+        private double? resultadoCostoMinimo = null;
+        private double? resultadoDemaxmin = null;
+
         public Form1()
         {
             InitializeComponent();
@@ -49,6 +53,12 @@ namespace INV_CMDMAX
 
             // Redimensionar los DGV
             ResizeDataGridView();
+
+            // Limpiar resultados previos al crear una nueva matriz
+            resultadoCostoMinimo = null;
+            resultadoDemaxmin = null;
+            Tbcostominimo.Text = string.Empty;
+            TbDemaxmin.Text = string.Empty;
         }
 
         private void ResizeDataGridView()
@@ -109,9 +119,10 @@ namespace INV_CMDMAX
         private void DGVOferta_CellContentClick(object sender, DataGridViewCellEventArgs e){}
 
 
-
         private void BtnSolucionar_Click(object sender, EventArgs e)
         {
+
+            //ESTE BOTON SOLO DEBE HACER LO QUE DEBE
 
 
             // Fase 1: Extraer vectores de oferta y demanda
@@ -235,80 +246,24 @@ namespace INV_CMDMAX
 
         private void BtnEjecutarCostoMinimo_Click(object sender, EventArgs e)
         {
-            // Variables para almacenar los datos extraídos
-            int numOrigenes = (int)NumOrigen.Value;
-            int numDestinos = (int)NumDestino.Value;
+            // Obtener datos desde la UI
+            ExtraerVectoresOfertaDemanda(out double[] oferta, out double[] demanda);
+            double[,] costos = MapearMatrizCostos();
 
-            double[,] costos = new double[numOrigenes, numDestinos];
-            double[] oferta = new double[numOrigenes];
-            double[] demanda = new double[numDestinos];
-
-            // Llenar la matriz de costos desde el DataGridView
-            for (int i = 0; i < numOrigenes; i++)
-            {
-                for (int j = 0; j < numDestinos; j++)
-                {
-                    costos[i, j] = Convert.ToDouble(DGVCostos[j, i].Value);
-                }
-            }
-
-            // llenar el vector de oferta
-            for (int i = 0; i < numOrigenes; i++)
-            {
-                oferta[i] = Convert.ToDouble(DGVOferta[0, i].Value);
-            }
-
-            // llenar el vector de la demanda
-            for (int j = 0; j < numDestinos; j++)
-            {
-                demanda[j] = Convert.ToDouble(DGVDemanda[j, 0].Value);
-            }
-
-            // llamamos al metodo de Costo Minimo
-            CostoMinimo metodo = new CostoMinimo();
-            var resultado = metodo.EjecutarCostoMinimo(oferta, demanda, costos);
-
-            // Mostramos el resultado (ejemplo: mostrar en un MessageBox)
-            MessageBox.Show($"Costo Total Z: {resultado.costoZ}");
+            // Ejecutar algoritmo y mostrar en textbox
+            var resultado = new CostoMinimo().EjecutarCostoMinimo(oferta, demanda, costos);
+            Tbcostominimo.Text = resultado.costoZ.ToString();
         }
 
         private void BtnEjecutarDemaxmin_Click(object sender, EventArgs e)
         {
-            // Extract data from DataGridViews
-            int numOrigenes = (int)NumOrigen.Value;
-            int numDestinos = (int)NumDestino.Value;
+            // Obtener datos desde la UI
+            ExtraerVectoresOfertaDemanda(out double[] oferta, out double[] demanda);
+            double[,] costos = MapearMatrizCostos();
 
-            double[,] costos = new double[numOrigenes, numDestinos];
-            double[] oferta = new double[numOrigenes];
-            double[] demanda = new double[numDestinos];
-
-            // Llenar los costos de la matriz
-            for (int i = 0; i < numOrigenes; i++)
-            {
-                for (int j = 0; j < numDestinos; j++)
-                {
-                    costos[i, j] = Convert.ToDouble(DGVCostos[j, i].Value);
-                }
-            }
-
-            // llenar el vector de oferta
-            for (int i = 0; i < numOrigenes; i++)
-            {
-                oferta[i] = Convert.ToDouble(DGVOferta[0, i].Value);
-            }
-
-            // Llenar el vector de la demanda
-            for (int j = 0; j < numDestinos; j++)
-            {
-                demanda[j] = Convert.ToDouble(DGVDemanda[j, 0].Value);
-            }
-
-            // llamamos al metodo de Demaxmin
-            ResolvedorDemaXMin metodo = new ResolvedorDemaXMin();
-            var resultado = metodo.EjecutarDemaxmin(oferta, demanda, costos);
-
-            // Display the result (example: show in a MessageBox)
-            MessageBox.Show($"Costo Total Z: {resultado.costoZ}");
+            // Ejecutar algoritmo y mostrar en textbox
+            var resultado = new ResolvedorDemaXMin().EjecutarDemaxmin(oferta, demanda, costos);
+            TbDemaxmin.Text = resultado.costoZ.ToString();
         }
 
         private void InitializeCustomComponents()
@@ -324,13 +279,21 @@ namespace INV_CMDMAX
             ExtraerVectoresOfertaDemanda(out double[] oferta, out double[] demanda);
             double[,] costos = MapearMatrizCostos();
 
-            // Execute selected method
+            // Execute selected method and show result in corresponding textbox
+            if (CbMetodos.SelectedItem == null) return;
             string metodoSeleccionado = CbMetodos.SelectedItem.ToString();
-            double costoTotalZ = metodoSeleccionado == "Costo Minimo"
-                ? new CostoMinimo().EjecutarCostoMinimo(oferta, demanda, costos).costoZ
-                : new ResolvedorDemaXMin().EjecutarDemaxmin(oferta, demanda, costos).costoZ;
-
-            MessageBox.Show($"Costo Total Z: {costoTotalZ}");
+            if (metodoSeleccionado == "Costo Minimo")
+            {
+                var res = new CostoMinimo().EjecutarCostoMinimo(oferta, demanda, costos);
+                resultadoCostoMinimo = res.costoZ;
+                Tbcostominimo.Text = resultadoCostoMinimo.ToString();
+            }
+            else if (metodoSeleccionado == "Demaxmin")
+            {
+                var res = new ResolvedorDemaXMin().EjecutarDemaxmin(oferta, demanda, costos);
+                resultadoDemaxmin = res.costoZ;
+                TbDemaxmin.Text = resultadoDemaxmin.ToString();
+            }
         }
 
         private void CbMetodos_SelectedIndexChanged(object sender, EventArgs e)

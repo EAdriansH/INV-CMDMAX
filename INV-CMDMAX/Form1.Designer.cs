@@ -47,6 +47,8 @@
             resolucionPasoPorPasoToolStripMenuItem = new ToolStripMenuItem();
             DGVDemanda = new DataGridView();
             DGVOferta = new DataGridView();
+            TbDemaxmin = new TextBox();
+            LblDemaxmin = new Label();
             ((System.ComponentModel.ISupportInitialize)DGVCostos).BeginInit();
             ((System.ComponentModel.ISupportInitialize)NumOrigen).BeginInit();
             ((System.ComponentModel.ISupportInitialize)NumDestino).BeginInit();
@@ -201,6 +203,7 @@
             menuStrip1.Size = new Size(1466, 28);
             menuStrip1.TabIndex = 12;
             menuStrip1.Text = "menuStrip1";
+            menuStrip1.Visible = false;
             // 
             // OPCIONESToolStripMenuItem
             // 
@@ -262,11 +265,29 @@
             DGVOferta.Name = "DGVOferta";
             DGVOferta.RowHeadersVisible = false;
             DGVOferta.RowHeadersWidth = 51;
-            DGVOferta.ScrollBars = ScrollBars.None;
+            DGVOferta.ScrollBars = ScrollBars.Vertical;
             DGVOferta.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            DGVOferta.Size = new Size(57, 251);
+            DGVOferta.Size = new Size(61, 251);
             DGVOferta.TabIndex = 14;
             DGVOferta.CellContentClick += DGVOferta_CellContentClick_1;
+            // 
+            // TbDemaxmin
+            // 
+            TbDemaxmin.Location = new Point(21, 445);
+            TbDemaxmin.Name = "TbDemaxmin";
+            TbDemaxmin.Size = new Size(161, 27);
+            TbDemaxmin.TabIndex = 15;
+            // 
+            // LblDemaxmin
+            // 
+            LblDemaxmin.AutoSize = true;
+            LblDemaxmin.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            LblDemaxmin.ForeColor = Color.White;
+            LblDemaxmin.Location = new Point(21, 422);
+            LblDemaxmin.Name = "LblDemaxmin";
+            LblDemaxmin.Size = new Size(89, 20);
+            LblDemaxmin.TabIndex = 16;
+            LblDemaxmin.Text = "Demaxmin:";
             // 
             // Form1
             // 
@@ -275,6 +296,8 @@
             BackColor = Color.DimGray;
             BackgroundImageLayout = ImageLayout.Stretch;
             ClientSize = new Size(1466, 586);
+            Controls.Add(LblDemaxmin);
+            Controls.Add(TbDemaxmin);
             Controls.Add(DGVOferta);
             Controls.Add(DGVDemanda);
             Controls.Add(Tbcostominimo);
@@ -327,5 +350,7 @@
         private ToolStripMenuItem resolucionPasoPorPasoToolStripMenuItem;
         private DataGridView DGVDemanda;
         private DataGridView DGVOferta;
+        private TextBox TbDemaxmin;
+        private Label LblDemaxmin;
     }
 }

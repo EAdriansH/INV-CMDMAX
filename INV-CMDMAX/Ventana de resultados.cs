@@ -12,7 +12,7 @@ namespace INV_CMDMAX
     {
         public Ventana_de_resultados()
         {
-            InitializeComponent();
+           
         }
     }
 }
