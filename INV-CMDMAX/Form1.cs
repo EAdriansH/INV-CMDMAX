@@ -1,4 +1,6 @@
 using Microsoft.VisualBasic;
+using System;
+using System.Drawing;
 
 namespace INV_CMDMAX
 {
@@ -116,7 +118,7 @@ namespace INV_CMDMAX
             }
         }
 
-        private void DGVOferta_CellContentClick(object sender, DataGridViewCellEventArgs e){}
+        private void DGVOferta_CellContentClick(object sender, DataGridViewCellEventArgs e) { }
 
 
         private void BtnSolucionar_Click(object sender, EventArgs e)
@@ -242,7 +244,7 @@ namespace INV_CMDMAX
 
         }
 
-        
+
 
         private void BtnEjecutarCostoMinimo_Click(object sender, EventArgs e)
         {
@@ -303,6 +305,102 @@ namespace INV_CMDMAX
         private void LblDestino_Click(object sender, EventArgs e)
         {
 
+        }
+
+    
+
+        private void BtnBalancear_Click_1(object sender, EventArgs e)
+        {
+            try
+            {
+                // Usaremos los DataGridView actuales: DGVCostos, DGVOferta, DGVDemanda
+                int numFilas = DGVCostos.RowCount;
+                int numCols = DGVCostos.ColumnCount;
+
+                double totalOferta = 0;
+                double totalDemanda = 0;
+
+                // Sumar oferta desde DGVOferta (columna única)
+                for (int i = 0; i < DGVOferta.RowCount; i++)
+                {
+                    totalOferta += Convert.ToDouble(DGVOferta.Rows[i].Cells[0].Value ?? 0);
+                }
+
+                // Sumar demanda desde DGVDemanda (fila única)
+                for (int j = 0; j < DGVDemanda.ColumnCount; j++)
+                {
+                    totalDemanda += Convert.ToDouble(DGVDemanda.Rows[0].Cells[j].Value ?? 0);
+                }
+
+                if (Math.Abs(totalOferta - totalDemanda) < 0.0001)
+                {
+                    MessageBox.Show("La matriz ya está balanceada.", "Balanceo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                if (totalOferta < totalDemanda)
+                {
+                    // Falta oferta: agregar un origen ficticio (fila) con costos 0 y oferta = diferencia
+                    double diferencia = totalDemanda - totalOferta;
+
+                    // Agregar fila en DGVCostos al final
+                    DGVCostos.RowCount = DGVCostos.RowCount + 1;
+                    int nuevaFila = DGVCostos.RowCount - 1;
+                    DGVCostos.Rows[nuevaFila].HeaderCell.Value = "Origen Ficticio";
+
+                    // Poner costos a 0 y marcar color
+                    for (int j = 0; j < DGVCostos.ColumnCount; j++)
+                    {
+                        DGVCostos.Rows[nuevaFila].Cells[j].Value = 0;
+                        DGVCostos.Rows[nuevaFila].Cells[j].Style.BackColor = Color.LightGray;
+                    }
+
+                    // Agregar la oferta en DGVOferta (añadir nueva fila)
+                    DGVOferta.RowCount = DGVOferta.RowCount + 1;
+                    DGVOferta.Rows[nuevaFila].Cells[0].Value = diferencia;
+                    // Actualizar nombre en encabezado si están visibles
+                    try { DGVOferta.Rows[nuevaFila].HeaderCell.Value = "O. Ficticio"; } catch { }
+
+                    // Actualizar contador de orígenes y redimensionar vistas
+                    if (NumOrigen.Value == NumOrigen.Maximum) NumOrigen.Maximum = NumOrigen.Maximum + 1;
+                    NumOrigen.Value = NumOrigen.Value + 1;
+                    ResizeDataGridView();
+
+                    MessageBox.Show($"Se agregó un Origen Ficticio con oferta {diferencia}.", "Balanceo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else // totalOferta > totalDemanda
+                {
+                    // Falta demanda: agregar un destino ficticio (columna) con costos 0 y demanda = diferencia
+                    double diferencia = totalOferta - totalDemanda;
+
+                    // Agregar columna en DGVCostos
+                    int nuevaCol = DGVCostos.ColumnCount;
+                    DGVCostos.ColumnCount = DGVCostos.ColumnCount + 1;
+                    DGVCostos.Columns[nuevaCol].HeaderText = "D. Ficticio";
+
+                    // Poner costos a 0 y marcar color
+                    for (int i = 0; i < DGVCostos.RowCount; i++)
+                    {
+                        DGVCostos.Rows[i].Cells[nuevaCol].Value = 0;
+                        DGVCostos.Rows[i].Cells[nuevaCol].Style.BackColor = Color.LightGray;
+                    }
+
+                    // Agregar la demanda en DGVDemanda (añadir columna)
+                    DGVDemanda.ColumnCount = DGVDemanda.ColumnCount + 1;
+                    DGVDemanda.Rows[0].Cells[nuevaCol].Value = diferencia;
+
+                    // Actualizar contador de destinos y redimensionar vistas
+                    if (NumDestino.Value == NumDestino.Maximum) NumDestino.Maximum = NumDestino.Maximum + 1;
+                    NumDestino.Value = NumDestino.Value + 1;
+                    ResizeDataGridView();
+
+                    MessageBox.Show($"Se agregó un Destino Ficticio con demanda {diferencia}.", "Balanceo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al balancear: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

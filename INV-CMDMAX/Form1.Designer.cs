@@ -37,7 +37,6 @@
             NumDestino = new NumericUpDown();
             LblDestino = new Label();
             LblMetodos = new Label();
-            BtnSolucionar = new Button();
             LblCostoMinimo = new Label();
             Tbcostominimo = new TextBox();
             menuStrip1 = new MenuStrip();
@@ -49,6 +48,7 @@
             DGVOferta = new DataGridView();
             TbDemaxmin = new TextBox();
             LblDemaxmin = new Label();
+            BtnBalancear = new Button();
             ((System.ComponentModel.ISupportInitialize)DGVCostos).BeginInit();
             ((System.ComponentModel.ISupportInitialize)NumOrigen).BeginInit();
             ((System.ComponentModel.ISupportInitialize)NumDestino).BeginInit();
@@ -162,17 +162,6 @@
             LblMetodos.Size = new Size(148, 20);
             LblMetodos.TabIndex = 7;
             LblMetodos.Text = "Metodo de Solucion";
-            // 
-            // BtnSolucionar
-            // 
-            BtnSolucionar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            BtnSolucionar.Location = new Point(38, 286);
-            BtnSolucionar.Name = "BtnSolucionar";
-            BtnSolucionar.Size = new Size(94, 28);
-            BtnSolucionar.TabIndex = 8;
-            BtnSolucionar.Text = "Solucionar";
-            BtnSolucionar.UseVisualStyleBackColor = true;
-            BtnSolucionar.Click += BtnSolucionar_Click;
             // 
             // LblCostoMinimo
             // 
@@ -289,6 +278,16 @@
             LblDemaxmin.TabIndex = 16;
             LblDemaxmin.Text = "Demaxmin:";
             // 
+            // BtnBalancear
+            // 
+            BtnBalancear.Location = new Point(21, 317);
+            BtnBalancear.Name = "BtnBalancear";
+            BtnBalancear.Size = new Size(125, 29);
+            BtnBalancear.TabIndex = 17;
+            BtnBalancear.Text = "Balancear";
+            BtnBalancear.UseVisualStyleBackColor = true;
+            BtnBalancear.Click += BtnBalancear_Click_1;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -296,13 +295,13 @@
             BackColor = Color.DimGray;
             BackgroundImageLayout = ImageLayout.Stretch;
             ClientSize = new Size(1466, 586);
+            Controls.Add(BtnBalancear);
             Controls.Add(LblDemaxmin);
             Controls.Add(TbDemaxmin);
             Controls.Add(DGVOferta);
             Controls.Add(DGVDemanda);
             Controls.Add(Tbcostominimo);
             Controls.Add(LblCostoMinimo);
-            Controls.Add(BtnSolucionar);
             Controls.Add(LblMetodos);
             Controls.Add(LblDestino);
             Controls.Add(NumDestino);
@@ -316,7 +315,7 @@
             MaximizeBox = false;
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "Resolucionador";
+            Text = "DualSolver IO";
             TransparencyKey = Color.BurlyWood;
             Load += Form1_Load;
             ((System.ComponentModel.ISupportInitialize)DGVCostos).EndInit();
@@ -340,7 +339,7 @@
         private NumericUpDown NumDestino;
         private Label LblDestino;
         private Label LblMetodos;
-        private Button BtnSolucionar;
+        private Button BtnBalancear;
         private Label LblCostoMinimo;
         private TextBox Tbcostominimo;
         private MenuStrip menuStrip1;
