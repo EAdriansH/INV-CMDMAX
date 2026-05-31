@@ -1,65 +1,132 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq; // Necesario para usar .Sum()
 using System.Text;
 
 
-public class CostoMinimo
+namespace INV_CMDMAX.Metodos
 {
-    public (double[,] asignaciones, double costoZ) EjecutarCostoMinimo(double[] oferta, double[] demanda, double[,] costos)
+    public class CostoMinimo
     {
-        int numFilas = oferta.Length;
-        int numCols = demanda.Length;
-
-        double[,] asignaciones = new double[numFilas, numCols];
-        double costoTotalZ = 0;
-
-        // Clonamos los arreglos para no alterar los datos de la interfaz visual
-        double[] ofertaActiva = (double[])oferta.Clone();
-        double[] demandaActiva = (double[])demanda.Clone();
-
-        // El ciclo corre mientras siga existiendo demanda
-        while (demandaActiva.Sum() > 0.0001)
+        // 1. Actualizamos la firma para que devuelva la lista de pasos (pasosGenerados)
+        public (double[,] asignaciones, double costoZ, List<PasoAlgoritmo> pasosGenerados) EjecutarCostoMinimo(double[] oferta, double[] demanda, double[,] costos)
         {
-            double costoMinimoGlobal = double.MaxValue;
-            int bestI = -1; // Coordenada Y (Fila/Origen)
-            int bestJ = -1; // Coordenada X (Columna/Destino)
+            int numFilas = oferta.Length;
+            int numCols = demanda.Length;
 
-            // --- FASE 1: Exploración Global ---
-            // Escaneamos TODA la tabla en busca del costo más bajo absoluto
-            // que tenga tanto oferta como demanda disponible.
+            double[,] asignaciones = new double[numFilas, numCols];
+            double costoTotalZ = 0;
+
+            // Variables para la "Máquina del Tiempo"
+            List<PasoAlgoritmo> listaDeFotos = new List<PasoAlgoritmo>();
+            List<int> filasTachadas = new List<int>();
+            List<int> columnasTachadas = new List<int>();
+
+            // Clonamos los arreglos para no alterar los datos crudos
+            double[] ofertaActiva = (double[])oferta.Clone();
+            double[] demandaActiva = (double[])demanda.Clone();
+            //--- FOTO INICIAL (Paso 0) ---
+            PasoAlgoritmo fotoInicial = new PasoAlgoritmo();
+            fotoInicial.Explicacion = "Estado inicial de la matriz. Presione 'Siguiente' para comenzar las asignaciones.";
+            string[,] matrizInicial = new string[numFilas, numCols];
             for (int i = 0; i < numFilas; i++)
             {
                 for (int j = 0; j < numCols; j++)
                 {
-                    if (ofertaActiva[i] > 0 && demandaActiva[j] > 0)
+                    matrizInicial[i, j] = $"${costos[i, j]}"; // Mostramos solo el costo original
+                }
+            }
+            fotoInicial.MatrizPrincipal = matrizInicial;
+            fotoInicial.OfertaRestante = (double[])ofertaActiva.Clone();
+            fotoInicial.DemandaRestante = (double[])demandaActiva.Clone();
+            fotoInicial.FilasTachadas = new List<int>();
+            fotoInicial.ColumnasTachadas = new List<int>();
+            listaDeFotos.Add(fotoInicial);
+            // --------------------------------
+
+            // El ciclo corre mientras siga existiendo demanda
+            while (demandaActiva.Sum() > 0.0001)
+            {
+                double costoMinimoGlobal = double.MaxValue;
+                int bestI = -1; // Coordenada Y (Fila/Origen)
+                int bestJ = -1; // Coordenada X (Columna/Destino)
+
+                // --- FASE 1: Exploración Global ---
+                for (int i = 0; i < numFilas; i++)
+                {
+                    for (int j = 0; j < numCols; j++)
                     {
-                        if (costos[i, j] < costoMinimoGlobal)
+                        if (ofertaActiva[i] > 0 && demandaActiva[j] > 0)
                         {
-                            costoMinimoGlobal = costos[i, j];
-                            bestI = i;
-                            bestJ = j;
+                            if (costos[i, j] < costoMinimoGlobal)
+                            {
+                                costoMinimoGlobal = costos[i, j];
+                                bestI = i;
+                                bestJ = j;
+                            }
                         }
                     }
                 }
+
+                // Failsafe: Evitar loops infinitos
+                if (bestI == -1 || bestJ == -1) break;
+
+                // --- FASE 2: Asignación ---
+                double cantidadAsignar = Math.Min(ofertaActiva[bestI], demandaActiva[bestJ]);
+
+                asignaciones[bestI, bestJ] = cantidadAsignar;
+                costoTotalZ += (cantidadAsignar * costoMinimoGlobal);
+
+                // --- FASE 3: Actualización ---
+                ofertaActiva[bestI] -= cantidadAsignar;
+                demandaActiva[bestJ] -= cantidadAsignar;
+
+                // --- DETECCIÓN DE TACHADOS (Para la interfaz visual) ---
+                if (ofertaActiva[bestI] < 0.0001 && !filasTachadas.Contains(bestI))
+                {
+                    filasTachadas.Add(bestI);
+                }
+                if (demandaActiva[bestJ] < 0.0001 && !columnasTachadas.Contains(bestJ))
+                {
+                    columnasTachadas.Add(bestJ);
+                }
+
+                // --- INICIO DE LA TOMA FOTOGRÁFICA ---
+                PasoAlgoritmo foto = new PasoAlgoritmo();
+                
+                foto.Explicacion = $"Se asignaron {cantidadAsignar} unidades a costo ${costos[bestI, bestJ]}.";
+
+                // CREAMOS LA MATRIZ VISUAL COMBINANDO ASIGNACIONES Y COSTOS ORIGINALES
+                string[,] matrizVisual = new string[numFilas, numCols];
+                for (int fila = 0; fila < numFilas; fila++)
+                {
+                    for (int col = 0; col < numCols; col++)
+                    {
+                        if (asignaciones[fila, col] > 0)
+                        {
+                            // Si hay mercancía asignada, mostramos formato Excel: "40 ($5)"
+                            matrizVisual[fila, col] = $"{asignaciones[fila, col]} (${costos[fila, col]})";
+                        }
+                        else
+                        {
+                            // Si no hay nada asignado, mantenemos el costo original visible: "$5"
+                            matrizVisual[fila, col] = $"${costos[fila, col]}";
+                        }
+                    }
+                }
+
+                foto.MatrizPrincipal = matrizVisual;
+                foto.OfertaRestante = (double[])ofertaActiva.Clone();
+                foto.DemandaRestante = (double[])demandaActiva.Clone();
+                foto.FilasTachadas = new List<int>(filasTachadas);
+                foto.ColumnasTachadas = new List<int>(columnasTachadas);
+
+                listaDeFotos.Add(foto);
+                // --- FIN DE LA TOMA FOTOGRÁFICA ---
             }
 
-            // Failsafe: Si no encontró nada (ej. si el usuario ingresó una matriz desbalanceada 
-            // y se saltó la validación), rompemos el ciclo para evitar un loop infinito.
-            if (bestI == -1 || bestJ == -1) break;
-
-            // --- FASE 2: Asignación ---
-            // Le damos todo lo que podamos sin pasarnos de lo que piden ni de lo que tenemos
-            double cantidadAsignar = Math.Min(ofertaActiva[bestI], demandaActiva[bestJ]);
-
-            asignaciones[bestI, bestJ] = cantidadAsignar;
-            costoTotalZ += (cantidadAsignar * costoMinimoGlobal);
-
-            // --- FASE 3: Actualización ---
-            // Restamos lo enviado de los inventarios (esto "tacha" virtualmente la fila o columna cuando llega a 0)
-            ofertaActiva[bestI] -= cantidadAsignar;
-            demandaActiva[bestJ] -= cantidadAsignar;
+            // Retornamos todo al Form1
+            return (asignaciones, costoTotalZ, listaDeFotos);
         }
-
-        return (asignaciones, costoTotalZ);
     }
 }

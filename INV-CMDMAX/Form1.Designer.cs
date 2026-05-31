@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             LblOrigen = new Label();
             DGVCostos = new DataGridView();
             BtnCreadorMatriz = new Button();
@@ -49,6 +50,10 @@
             TbDemaxmin = new TextBox();
             LblDemaxmin = new Label();
             BtnBalancear = new Button();
+            LblVersion = new Label();
+            btnAnterior = new Button();
+            BtnSiguiente = new Button();
+            lblExplicacion = new Label();
             ((System.ComponentModel.ISupportInitialize)DGVCostos).BeginInit();
             ((System.ComponentModel.ISupportInitialize)NumOrigen).BeginInit();
             ((System.ComponentModel.ISupportInitialize)NumDestino).BeginInit();
@@ -288,6 +293,46 @@
             BtnBalancear.UseVisualStyleBackColor = true;
             BtnBalancear.Click += BtnBalancear_Click_1;
             // 
+            // LblVersion
+            // 
+            LblVersion.AutoSize = true;
+            LblVersion.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            LblVersion.ForeColor = Color.LightSeaGreen;
+            LblVersion.Location = new Point(12, 554);
+            LblVersion.Name = "LblVersion";
+            LblVersion.Size = new Size(285, 23);
+            LblVersion.TabIndex = 19;
+            LblVersion.Text = "V1.2-Soporte para matrices 10x10";
+            // 
+            // btnAnterior
+            // 
+            btnAnterior.Location = new Point(202, 22);
+            btnAnterior.Name = "btnAnterior";
+            btnAnterior.Size = new Size(94, 29);
+            btnAnterior.TabIndex = 20;
+            btnAnterior.Text = "Anterior";
+            btnAnterior.UseVisualStyleBackColor = true;
+            btnAnterior.Click += btnAnterior_Click;
+            // 
+            // BtnSiguiente
+            // 
+            BtnSiguiente.Location = new Point(314, 22);
+            BtnSiguiente.Name = "BtnSiguiente";
+            BtnSiguiente.Size = new Size(94, 29);
+            BtnSiguiente.TabIndex = 21;
+            BtnSiguiente.Text = "Siguiente";
+            BtnSiguiente.UseVisualStyleBackColor = true;
+            BtnSiguiente.Click += BtnSiguiente_Click;
+            // 
+            // lblExplicacion
+            // 
+            lblExplicacion.AutoSize = true;
+            lblExplicacion.Location = new Point(431, 26);
+            lblExplicacion.Name = "lblExplicacion";
+            lblExplicacion.Size = new Size(92, 20);
+            lblExplicacion.TabIndex = 22;
+            lblExplicacion.Text = "EN ESPERA...";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -295,6 +340,10 @@
             BackColor = Color.DimGray;
             BackgroundImageLayout = ImageLayout.Stretch;
             ClientSize = new Size(1466, 586);
+            Controls.Add(lblExplicacion);
+            Controls.Add(BtnSiguiente);
+            Controls.Add(btnAnterior);
+            Controls.Add(LblVersion);
             Controls.Add(BtnBalancear);
             Controls.Add(LblDemaxmin);
             Controls.Add(TbDemaxmin);
@@ -311,6 +360,7 @@
             Controls.Add(DGVCostos);
             Controls.Add(LblOrigen);
             Controls.Add(menuStrip1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MainMenuStrip = menuStrip1;
             MaximizeBox = false;
             Name = "Form1";
@@ -351,5 +401,9 @@
         private DataGridView DGVOferta;
         private TextBox TbDemaxmin;
         private Label LblDemaxmin;
+        private Label LblVersion;
+        private Button btnAnterior;
+        private Button BtnSiguiente;
+        private Label lblExplicacion;
     }
 }

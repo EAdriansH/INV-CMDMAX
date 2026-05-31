@@ -1,11 +1,15 @@
-using Microsoft.VisualBasic;
 using System;
 using System.Drawing;
+using INV_CMDMAX.Metodos;
+using Microsoft.VisualBasic;
 
 namespace INV_CMDMAX
 {
+
     public partial class Form1 : Form
     {
+        List<PasoAlgoritmo> historialPasos = new List<PasoAlgoritmo>();
+        int pasoActual = 0;
         // Guardar resultados en variables de instancia para evitar borrados accidentales
         private double? resultadoCostoMinimo = null;
         private double? resultadoDemaxmin = null;
@@ -123,24 +127,6 @@ namespace INV_CMDMAX
 
         private void BtnSolucionar_Click(object sender, EventArgs e)
         {
-
-            //ESTE BOTON SOLO DEBE HACER LO QUE DEBE
-
-
-            // Fase 1: Extraer vectores de oferta y demanda
-            ExtraerVectoresOfertaDemanda(out double[] oferta, out double[] demanda);
-
-            // Fase 2: Mapear la matriz de costos unitarios
-            double[,] matrizCostos = MapearMatrizCostos();
-
-            // Fase 3: Validar balanceo
-            if (ValidarBalanceo(oferta, demanda))
-            {
-                // Aquí puedes llamar al motor de resolución (Demaxmin o Costo Mínimo)
-                MessageBox.Show("Iniciando el algoritmo de resolución...");
-            }
-
-
         }
         private bool ValidarBalanceo(double[] oferta, double[] demanda)
         {
@@ -184,13 +170,31 @@ namespace INV_CMDMAX
             {
                 for (int j = 0; j < numDestinos; j++)
                 {
-                    if (DGVCostos.Rows[i].Cells[j].Value != null && double.TryParse(DGVCostos.Rows[i].Cells[j].Value.ToString(), out double costo))
+                    if (DGVCostos.Rows[i].Cells[j].Value != null)
                     {
-                        matrizCostos[i, j] = costo;
+                        string textoCelda = DGVCostos.Rows[i].Cells[j].Value.ToString();
+
+                        // LIMPIEZA VISUAL 
+                        // Si la celda tiene formato visual (ej. "$5" o "40 ($5)"), extraemos solo el costo
+                        if (textoCelda.Contains("$"))
+                        {
+                            int indiceDolar = textoCelda.IndexOf('$');
+                            // Cortamos todo lo que esté antes del $, y le quitamos el paréntesis final si lo tiene
+                            textoCelda = textoCelda.Substring(indiceDolar + 1).Replace(")", "").Trim();
+                        }
+
+                        if (double.TryParse(textoCelda, out double costo))
+                        {
+                            matrizCostos[i, j] = costo;
+                        }
+                        else
+                        {
+                            matrizCostos[i, j] = 0; // Valor predeterminado si falla
+                        }
                     }
                     else
                     {
-                        matrizCostos[i, j] = 0; // Valor predeterminado si la celda está vacía o no es válida
+                        matrizCostos[i, j] = 0; // Valor predeterminado si la celda está vacía
                     }
                 }
             }
@@ -277,24 +281,42 @@ namespace INV_CMDMAX
 
         private void CmbMetodoSeleccion_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Extract data
+            // 1. Extraer datos limpios de la interfaz
             ExtraerVectoresOfertaDemanda(out double[] oferta, out double[] demanda);
             double[,] costos = MapearMatrizCostos();
 
-            // Execute selected method and show result in corresponding textbox
             if (CbMetodos.SelectedItem == null) return;
             string metodoSeleccionado = CbMetodos.SelectedItem.ToString();
+
+            // 2. BORRADO TÁCTICO: Limpiar el historial visual actual
+            historialPasos.Clear();
+            pasoActual = 0;
+            lblExplicacion.Text = "Calculando..."; 
+
+            // 3. Ejecutar y guardar fotos según el método
             if (metodoSeleccionado == "Costo Minimo")
             {
+               
+                //Ahora el metodo devolvera el z y la lista de pasos :D
                 var res = new CostoMinimo().EjecutarCostoMinimo(oferta, demanda, costos);
                 resultadoCostoMinimo = res.costoZ;
                 Tbcostominimo.Text = resultadoCostoMinimo.ToString();
+
+                historialPasos = res.pasosGenerados; // <--- Enganchamos la máquina del tiempo
             }
             else if (metodoSeleccionado == "Demaxmin")
             {
                 var res = new ResolvedorDemaXMin().EjecutarDemaxmin(oferta, demanda, costos);
                 resultadoDemaxmin = res.costoZ;
                 TbDemaxmin.Text = resultadoDemaxmin.ToString();
+
+                historialPasos = res.pasosGenerados; // <--- Enganchamos la máquina del tiempo
+            }
+
+            // 4. Proyectar el primer paso automáticamente si todo salió bien
+            if (historialPasos.Count > 0)
+            {
+                PintarPaso(0);
             }
         }
 
@@ -307,13 +329,13 @@ namespace INV_CMDMAX
 
         }
 
-    
+
 
         private void BtnBalancear_Click_1(object sender, EventArgs e)
         {
             try
             {
-                // Usaremos los DataGridView actuales: DGVCostos, DGVOferta, DGVDemanda
+               
                 int numFilas = DGVCostos.RowCount;
                 int numCols = DGVCostos.ColumnCount;
 
@@ -400,6 +422,98 @@ namespace INV_CMDMAX
             catch (Exception ex)
             {
                 MessageBox.Show("Error al balancear: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnSiguiente_Click(object sender, EventArgs e)
+        {
+            if (pasoActual < historialPasos.Count - 1)
+            {
+                pasoActual++;
+                PintarPaso(pasoActual);
+            }
+        }
+
+        private void btnAnterior_Click(object sender, EventArgs e)
+        {
+            if (pasoActual > 0)
+            {
+                pasoActual--;
+                PintarPaso(pasoActual);
+            }
+        }
+
+
+
+        private void PintarPaso(int indicePaso)
+        {
+            if (historialPasos == null || historialPasos.Count == 0) return;
+
+            PasoAlgoritmo paso = historialPasos[indicePaso];
+            lblExplicacion.Text = paso.Explicacion;
+
+            int numFilas = paso.MatrizPrincipal.GetLength(0);
+            int numColumnas = paso.MatrizPrincipal.GetLength(1);
+
+            // 1. LIMPIAR COLORES Y LLENAR DGVCostos
+            for (int i = 0; i < numFilas; i++)
+            {
+                for (int j = 0; j < numColumnas; j++)
+                {
+                    DGVCostos.Rows[i].Cells[j].Style.BackColor = Color.White;
+                    DGVCostos.Rows[i].Cells[j].Style.ForeColor = Color.Black;
+                    DGVCostos.Rows[i].Cells[j].Value = paso.MatrizPrincipal[i, j];
+                }
+            }
+
+            // 2. LIMPIAR COLORES Y LLENAR DGVOferta (Asumiendo que es de 1 sola columna)
+            for (int i = 0; i < numFilas; i++)
+            {
+                DGVOferta.Rows[i].Cells[0].Style.BackColor = Color.LightBlue; 
+                DGVOferta.Rows[i].Cells[0].Style.ForeColor = Color.Black;
+                DGVOferta.Rows[i].Cells[0].Value = paso.OfertaRestante[i];
+            }
+
+            // 3. LIMPIAR COLORES Y LLENAR DGVDemanda (Asumiendo que es de 1 sola fila)
+            for (int j = 0; j < numColumnas; j++)
+            {
+                DGVDemanda.Rows[0].Cells[j].Style.BackColor = Color.LightGreen; 
+                DGVDemanda.Rows[0].Cells[j].Style.ForeColor = Color.Black;
+                DGVDemanda.Rows[0].Cells[j].Value = paso.DemandaRestante[j];
+            }
+
+            // 4. EFECTO VISUAL: Tachar Filas (En DGVCostos y DGVOferta)
+            if (paso.FilasTachadas != null)
+            {
+                foreach (int f in paso.FilasTachadas)
+                {
+                    // Tachar la fila entera en la matriz central
+                    for (int j = 0; j < numColumnas; j++)
+                    {
+                        DGVCostos.Rows[f].Cells[j].Style.BackColor = Color.LightGray;
+                        DGVCostos.Rows[f].Cells[j].Style.ForeColor = Color.DarkGray;
+                    }
+                    // Tachar la celda de oferta de ese Origen
+                    DGVOferta.Rows[f].Cells[0].Style.BackColor = Color.LightGray;
+                    DGVOferta.Rows[f].Cells[0].Style.ForeColor = Color.DarkGray;
+                }
+            }
+
+            // 5. EFECTO VISUAL: Tachar Columnas (En DGVCostos y DGVDemanda)
+            if (paso.ColumnasTachadas != null)
+            {
+                foreach (int c in paso.ColumnasTachadas)
+                {
+                    // Tachar la columna entera en la matriz central
+                    for (int i = 0; i < numFilas; i++)
+                    {
+                        DGVCostos.Rows[i].Cells[c].Style.BackColor = Color.LightGray;
+                        DGVCostos.Rows[i].Cells[c].Style.ForeColor = Color.DarkGray;
+                    }
+                    // Tachar la celda de demanda de ese Destino
+                    DGVDemanda.Rows[0].Cells[c].Style.BackColor = Color.LightGray;
+                    DGVDemanda.Rows[0].Cells[c].Style.ForeColor = Color.DarkGray;
+                }
             }
         }
     }
